@@ -52,7 +52,6 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
 
         console.log(buffer);
 
-
         if (isTextFile) {
             const [err, msg] = await file.readPublic(trimmedPath);
            
@@ -81,15 +80,6 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
     
         if (isAPI) {
 
-            // const jsonData = buffer ? JSON.parse(buffer) : {};
-
-            // console.log(jsonData);
-            //     const newKey = "id";
-            //     let lastId = 0;
-            //     lastId +=1;
-
-            //     jsonData[newKey] = lastId;
-            
             const jsonData = buffer ? JSON.parse(buffer) : {};
             console.log(jsonData);
 
@@ -100,6 +90,13 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
             } else {
                 responseContent = 'User created!';
             }
+
+            //  console.log(jsonData);
+            //     const newKey = "id";
+            //     let lastId = 0;
+            //     lastId +=1;
+
+            //     jsonData[newKey] = lastId;
 
         }
     
