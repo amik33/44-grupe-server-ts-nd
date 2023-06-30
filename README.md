@@ -21,12 +21,6 @@ Design: []()
 
 -   Github pages
 -   README / [markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
--   favicon
--   fixed-width content
--   `<header>`, `<footer>`
--   FontAwesome font/icons
--   HTML entities
--   pseudo-elements
 
 ## 🧰 Getting Started
 
