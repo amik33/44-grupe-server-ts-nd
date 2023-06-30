@@ -1,31 +1,21 @@
 "use strict";
-
 import { server } from "./lib/server.js";
 
-console.clear();
-
-type App = {
-    init: () => void;
+export const initialFileStructure = () => {
+    console.log('Creating folder...');
+    console.log('Creating file...');
 }
 
-const app = {} as App;
-
-app.init = () => {
-    // susikurti reikiamus/trukstamus folderius ir failus
-    // atsinaujinti informacija
-    // duombaze:
-    // - prisijungti
-    // - pasiruosti struktura
-    // - surasyti pradinius duomenis
-    // paleisti serverio logika
+export const init = () => {
+    initialFileStructure();
     server.init();
-
-    // laike pasikartojantys procesai:
-    // - isivalyti nereikalingus failus/info
-    // - atnaujinti failus/info
-    // - backup darymas
 }
 
-app.init();
+export const app = {
+    init,
+    initialFileStructure,
+};
 
 export default app;
+
+app.init();

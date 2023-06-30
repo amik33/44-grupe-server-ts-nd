@@ -1,36 +1,23 @@
 import http, { IncomingMessage, ServerResponse } from 'node:http';
+import { StringDecoder } from 'node:string_decoder';
 import { file } from './files.js';
 
-type Server = {
-    init: () => void;
-    // httpServer: typeof http.createServer;
-    httpServer: any;
-}
-
-const server = {} as Server
-
-server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    const socket = req.socket as any;
-    const encryption = socket.encryption as any;
-    const ssl = encryption !== undefined ? 's' : '';
-
-    const baseURL = `http${ssl}://${req.headers.host}`;
-    const parsedURL = new URL(req.url ?? '', baseURL);
-    const httpMethod = req.method ? req.method.toLowerCase() : 'get';
-    const trimmedPath = parsedURL.pathname
+export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => {
+    const baseUrl = `http://${req.headers.host}`;
+    const parsedUrl = new URL(req.url ?? '', baseUrl);
+    const trimmedPath = parsedUrl.pathname
         .replace(/^\/+|\/+$/g, '')
-        .replace(/\/\/+/g, '/');
+        .replace(/\/+/g, '/');
 
     const textFileExtensions = ['css', 'js', 'svg', 'webmanifest'];
     const binaryFileExtensions = ['png', 'jpg', 'jpeg', 'webp', 'ico', 'eot', 'ttf', 'woff', 'woff2', 'otf'];
-    const fileExtension = trimmedPath.slice(trimmedPath.lastIndexOf('.') + 1);
-
-    const isTextFile = textFileExtensions.includes(fileExtension);
-    const isBinaryFile = binaryFileExtensions.includes(fileExtension);
+    const extension = (trimmedPath.includes('.') ? trimmedPath.split('.').at(-1) : '') as string;
+    
+    const isTextFile = textFileExtensions.includes(extension);
+    const isBinaryFile = binaryFileExtensions.includes(extension);
     const isAPI = trimmedPath.startsWith('api/');
     const isPage = !isTextFile && !isBinaryFile && !isAPI;
-
-    // type Mimes = { [key: string]: string };
+    
     type Mimes = Record<string, string>;
 
     const MIMES: Mimes = {
@@ -51,51 +38,111 @@ server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerRe
         ttf: 'font/ttf',
         webmanifest: 'application/manifest+json',
     };
+    
+    let responseContent: string | Buffer = '';
+    let buffer = '';
+    const stringDecoder = new StringDecoder('utf-8');
 
-
-    let responseContent: string | Buffer = 'ERROR: neturiu tai ko tu nori...';
-
-    if (isTextFile) {
-        const [err, msg] = await file.readPublic(trimmedPath);
-        res.writeHead(err ? 404 : 200, {
-            'Content-Type': MIMES[fileExtension],
-            'cache-control': `max-age=60`,
-        });
-        if (err) {
-            responseContent = msg;
-        } else {
-            responseContent = msg;
-        }
-    }
-
-    if (isBinaryFile) {
-        const [err, msg] = await file.readPublicBinary(trimmedPath);
-        res.writeHead(err ? 404 : 200, {
-            'Content-Type': MIMES[fileExtension],
-            'cache-control': `max-age=60`,
-        });
-        if (err) {
-            responseContent = msg;
-        } else {
-            responseContent = msg;
-        }
-    }
-
-    if (isAPI) {
-        responseContent = 'API DUOMENYS';
-    }
-
-    if (isPage) {
-        responseContent = `ERROR neturiu`;
-    }
-
-    return res.end(responseContent);
-});
-
-server.init = () => {
-    server.httpServer.listen(4412, () => {
-        console.log('Serveris sukasi ant http://localhost:4412');
+    req.on('data', (data) => {
+        buffer += stringDecoder.write(data);
     });
+
+    req.on('end', async () => {
+        buffer += stringDecoder.end();
+
+        console.log(buffer);
+
+
+        if (isTextFile) {
+            const [err, msg] = await file.readPublic(trimmedPath);
+           
+            if (err) {
+                responseContent = 'ERROR: not find to...';
+            } else {
+                res.writeHead(200, {
+                    'Content-Type': MIMES[extension],
+                })
+                responseContent = msg;
+            }
+        }
+    
+        if (isBinaryFile) {
+            const [err, msg] = await file.readPublicBinary(trimmedPath);
+           
+            if (err) {
+                responseContent = 'ERROR: not find...';
+            } else {
+                res.writeHead(200, {
+                    'Content-Type': MIMES[extension],
+                })
+                responseContent = msg;
+            }
+        }
+    
+        if (isAPI) {
+
+            // const jsonData = buffer ? JSON.parse(buffer) : {};
+
+            // console.log(jsonData);
+            //     const newKey = "id";
+            //     let lastId = 0;
+            //     lastId +=1;
+
+            //     jsonData[newKey] = lastId;
+            
+            const jsonData = buffer ? JSON.parse(buffer) : {};
+            console.log(jsonData);
+
+            const [err, msg] = await file.create('users', jsonData.email + '.json', jsonData)
+
+            if (err) {
+                responseContent = msg.toString();
+            } else {
+                responseContent = 'User created!';
+            }
+
+        }
+    
+        if (isPage) {
+            res.writeHead(200, {
+                'Content-Type': MIMES.html,
+    
+            });
+            responseContent = `<!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Document</title>
+                    <link rel="stylesheet" href="/css/main.css">
+                    <link rel="stylesheet" href="/css/main2.css">
+                </head>
+                <body>
+                    <h1>Labas rytas, Pasauli!</h1>
+                    <script src="/js/main.js" type="module" defer></script>
+                    <script src="/js/main2.js" type="module" defer></script> 
+                </body>
+                </html>`;
+        }
+    
+        res.end(responseContent);   
+    });
+
 };
 
-export { server };
+export const httpServer = http.createServer(serverLogic);
+
+export const init = () => {
+    httpServer.listen(4415, () => {
+        console.log('serverr running at http://Localhost:4415');
+    })
+};
+
+export const server = {
+    init,
+    httpServer,
+};
+
+export default server;
+
+
