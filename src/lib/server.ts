@@ -81,7 +81,7 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
         if (isAPI) {
 
             const jsonData = buffer ? JSON.parse(buffer) : {};
-            console.log(jsonData);
+            // console.log(jsonData);
 
             const [err, msg] = await file.create('users', jsonData.email + '.json', jsonData)
 
@@ -99,29 +99,25 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
             //     jsonData[newKey] = lastId;
 
         }
-    
+     
         if (isPage) {
-            res.writeHead(200, {
+            let fileResponse = await file.read('../pages', trimmedPath + '.html');
+            let [err, msg] = fileResponse;
+                
+            if (err) {
+                fileResponse = await file.read('../pages', '404.html');
+                err = fileResponse[0];
+                msg = fileResponse[1];
+            }
+    
+            res.writeHead(err ? 404 : 200, {
                 'Content-Type': MIMES.html,
-    
             });
-            responseContent = `<!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Document</title>
-                    <link rel="stylesheet" href="/css/main.css">
-                    <link rel="stylesheet" href="/css/main2.css">
-                </head>
-                <body>
-                    <h1>Labas rytas, Pasauli!</h1>
-                    <script src="/js/main.js" type="module" defer></script>
-                    <script src="/js/main2.js" type="module" defer></script> 
-                </body>
-                </html>`;
+
+            responseContent = msg as string;
+            
         }
-    
+        
         res.end(responseContent);   
     });
 
