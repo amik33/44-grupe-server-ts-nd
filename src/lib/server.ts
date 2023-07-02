@@ -90,9 +90,39 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
                 responseContent = 'User created!';
             }
 
-
+            if (req.method === 'POST') {
+                const [err] = await file.create('users', jsonData.email + '.json', jsonData);
+                if (err) {
+                    responseContent = 'User already exists, dublicate email';
+                    // responseContent = msg.toString();
+                } else {
+                    responseContent = 'User Created';
+                }
+            } else if (req.method === 'GET') {
+                 const [err, msg] = await file.read('users', jsonData.email + '.json');
+                if (err) {
+                    responseContent = msg.toString();
+                } else {
+                    responseContent = jsonData;
+                }
+               
+            } else if (req.method === 'PUT') {
+                const [err, msg] = await file.update('users', jsonData.email + '.json', jsonData);
+                if (err) {
+                    responseContent = msg.toString();
+                } else {
+                    responseContent = 'User Updated';
+                }
+            } else if (req.method === 'DELETE') {
+                const [err, msg] = await file.delete('users', jsonData.email + '.json');
+                if (err) {
+                    responseContent = msg.toString();
+                } else {
+                    responseContent = 'User Delete';
+                }
+            }
         }
-     
+
         if (isPage) {
             let fileResponse = await file.read('../pages', trimmedPath + '.html');
             let [err, msg] = fileResponse;
