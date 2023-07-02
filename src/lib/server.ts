@@ -81,7 +81,6 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
         if (isAPI) {
 
             const jsonData = buffer ? JSON.parse(buffer) : {};
-            // console.log(jsonData);
 
             const [err, msg] = await file.create('users', jsonData.email + '.json', jsonData)
 
@@ -91,12 +90,6 @@ export const serverLogic = async (req: IncomingMessage, res: ServerResponse) => 
                 responseContent = 'User created!';
             }
 
-            //  console.log(jsonData);
-            //     const newKey = "id";
-            //     let lastId = 0;
-            //     lastId +=1;
-
-            //     jsonData[newKey] = lastId;
 
         }
      
